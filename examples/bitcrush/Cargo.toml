@@ -1,0 +1,17 @@
+[package]
+name = "bitcrush"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "bitcrush"
+path = "src/main.rs"
+
+[dependencies]
+endless-rs = { path = "../.." }
+libm = "0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = "symbols"

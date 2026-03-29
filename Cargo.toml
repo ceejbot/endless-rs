@@ -1,0 +1,18 @@
+[package]
+name = "endless-rs"
+description = "A Rust SDK for the Polyend Endless programmable effects pedal"
+authors = ["C J Silverio <ceejceej@gmail.com>"]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/ceejbot/endless-rs"
+homepage = "https://github.com/ceejbot/endless-rs"
+readme = "README.md"
+keywords = ["embedded", "audio", "dsp", "polyend", "no-std"]
+categories = ["embedded", "no-std::no-alloc", "multimedia::audio"]
+
+[features]
+default = ["panic-halt"]
+panic-halt = []
+
+[dependencies]

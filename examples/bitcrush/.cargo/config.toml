@@ -1,0 +1,9 @@
+[build]
+target = "thumbv7em-none-eabihf"
+
+[target.thumbv7em-none-eabihf]
+rustflags = [
+  "-C", "link-arg=-Tpatch_imx.ld",
+  "-C", "link-arg=--defsym=PATCH_LOAD_ADDR=0x80000000",
+  "-C", "link-arg=--defsym=end=__patch_bss_end",
+]
