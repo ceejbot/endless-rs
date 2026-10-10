@@ -11,6 +11,9 @@ pub const PATCH_MAGIC: u32 = 0x4843_5450;
 /// ABI version. Must match the firmware's expected version.
 pub const PATCH_ABI_VERSION: u16 = 0x000B;
 
+/// Size in bytes of the header the firmware reads from offset 0.
+pub const PATCH_HEADER_SIZE: usize = 136;
+
 /// Environment provided by the firmware to the patch at init/update time.
 #[repr(C)]
 pub struct PatchEnv {
@@ -23,9 +26,10 @@ pub struct PatchEnv {
 /// In practice this is emitted via `global_asm!` (not as a Rust static)
 /// so that linker-computed fields (`image_size`, `bss_begin`, `bss_size`)
 /// can be filled in at link time. This struct exists as a reference for
-/// the binary layout; it is not instantiated directly.
+/// the binary layout; it is not instantiated directly. The size assertion
+/// below ties it to [`PATCH_HEADER_SIZE`], and `just check-example`
+/// verifies the bytes the macro actually emits.
 #[repr(C)]
-#[allow(dead_code)]
 pub struct PatchHeader {
     pub magic: u32,
     pub abi_version: u16,
@@ -51,3 +55,11 @@ pub struct PatchHeader {
     pub bss_size: u32,
     pub reserved: [u32; 16],
 }
+
+// The layout only matches the firmware on the 32-bit target; on a 64-bit host
+// the pointer-sized fields double, so the check is confined to the target.
+#[cfg(target_pointer_width = "32")]
+const _: () = {
+    assert!(core::mem::size_of::<PatchHeader>() == PATCH_HEADER_SIZE);
+    assert!(core::mem::size_of::<PatchEnv>() == 8);
+};

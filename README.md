@@ -13,7 +13,7 @@ The [official C/C++ SDK](https://github.com/polyend/FxPatchSDK) is here on GitHu
 ```sh
 rustup target add thumbv7em-none-eabihf
 brew install arm-none-eabi-gcc    # macOS; use your package manager elsewhere
-just setup                        # if you use just
+just setup                        # if you use just: installs both of the above plus dev tools
 ```
 
 See [`examples/bitcrush/`](examples/bitcrush/) for a port of the official SDK's bitcrush effect. If you can build and flash this successfully, you're in business.
@@ -58,7 +58,7 @@ name = "hello-world"
 path = "src/main.rs"
 
 [dependencies]
-endless-rs = { path = "../endless-rs" }
+endless-rs = "0.2"
 
 [profile.release]
 opt-level = "s"
@@ -66,7 +66,7 @@ lto = true
 strip = "symbols"
 ```
 
-Add a `.cargo/config.toml` to target the Endless hardware:
+Add a `.cargo/config.toml` to target the Endless hardware. The `endless-rs` build script puts its linker script on the search path, so `-Tpatch_imx.ld` resolves wherever the crate lives:
 
 ```toml
 [build]
@@ -76,19 +76,7 @@ target = "thumbv7em-none-eabihf"
 rustflags = [
   "-C", "link-arg=-Tpatch_imx.ld",
   "-C", "link-arg=--defsym=PATCH_LOAD_ADDR=0x80000000",
-  "-C", "link-arg=--defsym=end=__patch_bss_end",
 ]
-```
-
-Add a `build.rs` so the linker can find the script:
-
-```rust
-fn main() {
-    let ld_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("path/to/endless-rs/link");
-    println!("cargo:rustc-link-search={}", ld_dir.display());
-    println!("cargo:rerun-if-changed={}/patch_imx.ld", ld_dir.display());
-}
 ```
 
 And now we write the hello world of DSP effects: gain!
@@ -97,7 +85,7 @@ And now we write the hello world of DSP effects: gain!
 #![no_std]
 #![no_main]
 
-use endless_rs::{endless_patch, ActionId, Color, ParamId, ParameterMetadata, Patch};
+use endless_rs::{ParamId, Patch, endless_patch};
 
 struct HelloWorld {
     gain: f32,
@@ -132,6 +120,16 @@ arm-none-eabi-objcopy -O binary \
 ```
 
 Connect the Endless pedal to your computer over USB C, and copy the `.endl` file to the mounted Endless drive. If all goes well, the pedal's LED turns yellow, then flashes green, then becomes a steady blue, indicating that the effect is active. If the pedal LED goes red, the flash failed.
+
+## Developing this crate
+
+The crate itself has no unit tests: the ABI glue only exists once the `endless_patch!` macro is expanded, and that happens in the example. `just ci` runs every check, including building the example for the ARM target and verifying the emitted patch header byte for byte against the ABI.
+
+```sh
+just ci      # fmt check, clippy, doctests, and the ARM build + header check of the example
+just endl    # build the bitcrush example into a timestamped .endl file
+just inspect # dump the example's ELF sections
+```
 
 ## License
 

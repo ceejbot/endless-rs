@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use endless_rs::{endless_patch, ActionId, Color, ParamId, ParameterMetadata, Patch};
+use endless_rs::{ActionId, Color, ParamId, ParameterMetadata, Patch, endless_patch};
 
 struct Bitcrush {
     state: bool,
@@ -39,15 +39,14 @@ impl Patch for Bitcrush {
     }
 
     fn state_led_color(&self) -> Color {
-        if self.state {
-            Color::Blue
-        } else {
-            Color::DimBlue
-        }
+        if self.state { Color::Blue } else { Color::DimBlue }
     }
 }
 
-endless_patch!(Bitcrush, Bitcrush {
-    state: false,
-    param_value: 0.5,
-});
+endless_patch!(
+    Bitcrush,
+    Bitcrush {
+        state: false,
+        param_value: 0.5,
+    }
+);
